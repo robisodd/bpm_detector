@@ -1,0 +1,19 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "robisodd",
+    "longName": "BPM Detector",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "shortName": "BPM Detector",
+    "uuid": "55318008-8008-dead-beef-decafcafeb0b",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
