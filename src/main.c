@@ -1,6 +1,7 @@
 #include "pebble.h"
-// how long to discard old taps
+// samples_to_collect: how long to discard old taps
 //   when accelerometer is at 100Hz, this is in 10s of ms.  (e.g. 300 = 3 seconds)
+//   so it will average the time between taps over the past 3 seconds.
 //   if this is smaller, it'll react quicker but you won't be able to measure slow bpm (like < 60bpm)
 #define samples_to_collect 300
 
@@ -10,12 +11,13 @@ static Window *main_window;
        int16_t offset = 1000;
        int16_t buffer[samples_to_collect];
 
-int16_t abs16(int16_t x) {return (x ^ (x >> 15)) - (x >> 15);}  // quick 16-bit absolue value function
+int16_t abs16(int16_t x) {return (x ^ (x >> 15)) - (x >> 15);}  // quick 16-bit absolute value function
 
 void accel_handler(AccelData *data, uint32_t num_samples) {
   uint32_t lastpoint = 1000, count = 0, bpm = 0;
   
-  // if this is the first time this function is called, fill buffer with current data (this is to stop detecting 0-to-data as a tap)
+  // if this is the first time this function is called, fill buffer with current data
+  //  (this is to stop detecting the jump from 0 to "resting acceleromter" as a tap)
   if(offset == 1000) {
     offset = 0;
     for(uint32_t i=0; i<samples_to_collect; i++)
@@ -25,7 +27,7 @@ void accel_handler(AccelData *data, uint32_t num_samples) {
   // read accelerometer data and add samples to the rotating buffer
   for(uint32_t i=0; i<num_samples; i++) {
     buffer[offset] = data[i].z >> 3;             // replace oldest sample with newest (it seems accelerometer data is always evenly divisible by 8, hence the ">> 3")
-    offset = (offset + 1) % samples_to_collect;  // set offset to point to, what is now, the oldest sample
+    offset = (offset + 1) % samples_to_collect;  // set offset to point to what has now become the oldest sample
   }
   
   // average the time between all taps in the sample buffer
@@ -42,11 +44,19 @@ void accel_handler(AccelData *data, uint32_t num_samples) {
   }
   bpm = (6000 * count) / bpm;  // average = total divided by number collected (hence an average), and bpm = 60sec * 100Hz / average. so: bpm = (60s * 100Hz * number_collected) / total
   // Hmm, that statement on the line above might be confusing. Here's the breakdown:
-  //   technically: average_samples_between_taps (samples/tap) = total_samples_between_taps / number_of_taps
-  //          then: average_milliseconds_between_taps (ms/tap) = (1000 ms/sec) / (100 Hz (aka samples/sec) * average_samples_between_taps (samples/tap)
-  //       finally: bpm (aka taps/min) = (60 sec/min * 1000 ms/sec) / (average_milliseconds_between_taps (samples/tap))
+  //   First, get the average:
+  //                average_samples_between_taps (samples/tap) = total_samples_between_taps / number_of_taps  (I mean, that's what an "average" is.)
+  //   Then convert from samples to milliseconds based on 100Hz accelerometer setting:
+  //                average_milliseconds_between_taps (ms/tap) = ((1000 ms/sec) / 100 Hz (aka samples/sec)) * average_samples_between_taps (samples/tap)
+  //   Finally, much like frequency is 1/period, or framerate is 1/time_to_draw_one_frame, calculate the beats per millisecond:
+  //                taps_per_millisecond = 1 / average_milliseconds_between_taps (samples/tap)
+  //   And convert taps_per_millisecond to taps_per_second:
+  //                taps_per_second = (1000 ms/sec) * taps_per_millisecond
+  //   And convert taps_per_millisecond to taps_per_minute:
+  //                bpm (aka taps/min) = (60 sec/min) * taps_per_second
   
-  if(bpm > 999) bpm = 999;     // just in case (shouldn't be needed).  bpm is unsigned so it'll never go < 0, so no need to check for that
+  
+  if(bpm > 999) bpm = 999;  // bpm_text holds 3 digits max -- just in case (shouldn't be needed).  bpm is unsigned so it'll never go < 0, so no need to check for that
   
   // display the text
   snprintf(bpm_text, sizeof(bpm_text), "%ld bpm", bpm);
