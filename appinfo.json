@@ -4,15 +4,21 @@
         ""
     ],
     "companyName": "robisodd",
+    "enableMultiJS": true,
     "longName": "BPM Detector",
     "projectType": "native",
     "resources": {
         "media": []
     },
+    "sdkVersion": "3",
     "shortName": "BPM Detector",
-    "uuid": "55318008-8008-dead-beef-decafcafeb0b",
-    "versionCode": 1,
-    "versionLabel": "1.0",
+    "targetPlatforms": [
+        "aplite",
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "66f81bcf-1e42-4d5a-bb9f-64e93dda8b8e",
+    "versionLabel": "1.1",
     "watchapp": {
         "watchface": false
     }
