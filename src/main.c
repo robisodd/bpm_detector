@@ -70,7 +70,7 @@ void accel_handler(AccelData *data, uint32_t num_samples) {
   if(bpm > 999) bpm = 999;  // bpm_text holds 3 digits max -- just in case (shouldn't be needed).  Also, since bpm is unsigned so it'll never go < 0, so no need to check for that
   
   // display the text
-  bpm = 135;
+  // bpm = 135;  // Uncomment this line to have it always say "135 bpm", for photo ops
   snprintf(bpm_text, sizeof(bpm_text), "%d bpm", (int)bpm);
   text_layer_set_text(bpm_layer, bpm_text);
   
